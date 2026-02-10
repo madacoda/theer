@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Theer API Docs",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
