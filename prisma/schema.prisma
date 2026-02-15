@@ -18,8 +18,9 @@ model User {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  roles   UserRole[]
-  tickets Ticket[]
+  roles            UserRole[]
+  created_tickets  Ticket[]   @relation("CreatedTickets")
+  resolved_tickets Ticket[]   @relation("ResolvedTickets")
 
   @@map("users")
 }
@@ -71,14 +72,21 @@ model Ticket {
   category_id Int?
   category    TicketCategory? @relation(fields: [category_id], references: [id])
   title       String
-  content     String?
+  content     String? @db.Text
 
   status          String   @default("open") // open, processed, resolved, closed
   sentiment_score Float?
-  urgency         String?
-  ai_draft        String?
+  urgency         String?  // High, Medium, Low
+  ai_draft        String? @db.Text
+  ai_metadata     Json?    // Stores processing time, retry count, etc.
+  
   created_by_id   Int?
-  created_by      User?    @relation(fields: [created_by_id], references: [id])
+  created_by      User?    @relation("CreatedTickets", fields: [created_by_id], references: [id])
+  
+  resolved_by_id  Int?
+  resolved_by     User?    @relation("ResolvedTickets", fields: [resolved_by_id], references: [id])
+  resolved_at     DateTime?
+
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 

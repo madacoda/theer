@@ -1,0 +1,25 @@
+meta {
+  name: Me
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:3000/api/admin/user
+  body: none
+  auth: inherit
+}
+
+params:query {
+  ~role_id: 1
+  ~search: Hamada
+}
+
+headers {
+  Accept: application/json
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -22,3 +22,5 @@ prioritized, "ready-to-send" drafts.
    ● List View: Show tickets color-coded by Urgency (Red/Green).
    ● Detail View: Allow an agent to edit the AI draft and click "Resolve" (updating the
    database).
+
+This project will be delivered as code tests for employemeent

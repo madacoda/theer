@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../../infra/db';
+import { UserResource } from '../resources/user-resource';
 
 /**
  * AuthController
@@ -12,6 +13,7 @@ export class AuthController {
    * Register a new user
    */
   public async register(req: Request, res: Response): Promise<void> {
+    console.log(req.body);
     try {
       const { name, email, password } = req.body;
 
@@ -42,15 +44,7 @@ export class AuthController {
         },
       });
 
-      res.status(201).json({
-        status: 'success',
-        message: 'User registered successfully',
-        data: {
-          uuid: user.uuid,
-          name: user.name,
-          email: user.email,
-        },
-      });
+      res.status(201).json(UserResource.single(user, 'User registered successfully'));
     } catch (error) {
       console.error('Registration error:', error);
       res.status(500).json({
@@ -70,6 +64,11 @@ export class AuthController {
       // Find user
       const user = await prisma.user.findUnique({
         where: { email },
+        include: {
+          roles: {
+            include: { role: true }
+          }
+        }
       });
 
       if (!user) {
@@ -95,7 +94,7 @@ export class AuthController {
       const token = jwt.sign(
         { uuid: user.uuid, email: user.email },
         process.env.JWT_SECRET || 'secret',
-        { expiresIn: '1h' }
+        { expiresIn: '168h' }
       );
 
       res.json({
@@ -103,11 +102,7 @@ export class AuthController {
         message: 'Login successful',
         data: {
           token,
-          user: {
-            uuid: user.uuid,
-            name: user.name,
-            email: user.email,
-          },
+          user: UserResource.transform(user),
         },
       });
     } catch (error) {

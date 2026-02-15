@@ -1,6 +1,6 @@
 import { body } from 'express-validator';
-import { handleValidationErrors } from '../../utils/validation';
-import prisma from '../../infra/db';
+import { handleValidationErrors } from '../../../utils/validation';
+import prisma from '../../../infra/db';
 
 /**
  * Ticket Store/Update Validation Rules
@@ -8,9 +8,9 @@ import prisma from '../../infra/db';
 export const ticketRequest = [
   body('title')
     .notEmpty()
-    .withMessage('Title is required')
+    .withMessage('Subject is required')
     .isLength({ max: 255 })
-    .withMessage('Title must not exceed 255 characters'),
+    .withMessage('Subject must not exceed 255 characters'),
   body('content')
     .optional()
     .isString()

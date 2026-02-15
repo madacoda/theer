@@ -1,5 +1,5 @@
 import { body } from 'express-validator';
-import { handleValidationErrors } from '../../utils/validation';
+import { handleValidationErrors } from '../../../utils/validation';
 
 /**
  * TicketCategory Store/Update Validation Rules

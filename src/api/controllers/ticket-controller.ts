@@ -1,38 +1,42 @@
 import type { Request, Response } from 'express';
-import prisma from '../../infra/db';
-import { enqueueJob, TICKET_QUEUE } from '../../infra/rabbitmq';
+import { TicketService } from '../services/ticket-service';
+import { TicketResource } from '../resources/ticket-resource';
 
 /**
- * TicketController
- * Handles CRUD for tickets
+ * TicketController (User)
+ * Handles ticket operations for regular users
  */
 export class TicketController {
+  private ticketService: TicketService;
+
+  constructor() {
+    this.ticketService = new TicketService();
+  }
+
   /**
-   * List all tickets
+   * List user's own tickets
    */
   public async index(req: Request, res: Response): Promise<void> {
     try {
-      const tickets = await prisma.ticket.findMany({
-        include: {
-          category: true,
-          created_by: {
-            select: {
-              uuid: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: { created_at: 'desc' },
-      });
+      const page = parseInt(req.query.page as string) || 1;
+      const perPage = parseInt(req.query.perPage as string) || 10;
+      const user = (req as any).user;
+      
+      const filters = {
+        search: (req.query.search as string) || undefined,
+        urgency: (req.query.urgency as string) || undefined,
+        category: (req.query.category as string) || undefined,
+        status: (req.query.status as string) || undefined,
+      };
 
-      res.json({
-        status: 'success',
-        message: 'Tickets retrieved successfully',
-        data: tickets,
-      });
+      const { tickets, total } = await this.ticketService.getAll(user.uuid, false, page, perPage, filters);
+
+      const path = `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`;
+      const meta = TicketResource.paginate(tickets, total, page, perPage, path);
+
+      res.json(TicketResource.collection(tickets, meta, 'Your tickets retrieved successfully'));
     } catch (error) {
-      console.error('Index tickets error:', error);
+      console.error('User index tickets error:', error);
       res.status(500).json({
         status: 'error',
         message: 'Internal server error',
@@ -41,28 +45,12 @@ export class TicketController {
   }
 
   /**
-   * Create a new ticket
+   * Create a new ticket (stored as current user)
    */
   public async store(req: Request, res: Response): Promise<void> {
     try {
-      const { title, content, category_id, status } = req.body;
-      const currentUser = (req as any).user;
-
-      const ticket = await prisma.ticket.create({
-        data: {
-          title,
-          content,
-          category_id,
-          status: status || 'open',
-          created_by: currentUser ? { connect: { uuid: currentUser.uuid } } : undefined,
-        },
-        include: {
-          category: true,
-        },
-      });
-
-      // Enqueue job for AI triage
-      await enqueueJob(TICKET_QUEUE, { ticketId: ticket.id });
+      const user = (req as any).user;
+      const ticket = await this.ticketService.create(req.body, user.uuid);
 
       res.status(201).json({
         status: 'success',
@@ -74,7 +62,7 @@ export class TicketController {
         },
       });
     } catch (error) {
-      console.error('Store ticket error:', error);
+      console.error('User store ticket error:', error);
       res.status(500).json({
         status: 'error',
         message: 'Internal server error',
@@ -83,167 +71,25 @@ export class TicketController {
   }
 
   /**
-   * Resolve a ticket
-   * Updates AI draft and sets status to resolved
+   * Get a single ticket (must be owner)
    */
-  public async resolve(req: Request, res: Response): Promise<void> {
+  public async find(req: Request, res: Response): Promise<void> {
     try {
       const { uuid } = req.params;
-      const { ai_draft } = req.body;
-
-      const ticket = await prisma.ticket.findUnique({
-        where: { uuid: uuid as string },
-      });
+      const user = (req as any).user;
+      const ticket = await this.ticketService.getByUuid(uuid as string, user.uuid, false);
 
       if (!ticket) {
         res.status(404).json({
           status: 'error',
-          message: 'Ticket not found',
+          message: 'Ticket not found or access denied',
         });
         return;
       }
 
-      const updatedTicket = await prisma.ticket.update({
-        where: { uuid: uuid as string },
-        data: {
-          ai_draft: ai_draft || ticket.ai_draft,
-          status: 'resolved',
-        },
-      });
-
-      res.json({
-        status: 'success',
-        message: 'Ticket resolved successfully',
-        data: updatedTicket,
-      });
+      res.json(TicketResource.single(ticket));
     } catch (error) {
-      console.error('Resolve ticket error:', error);
-      res.status(500).json({
-        status: 'error',
-        message: 'Internal server error',
-      });
-    }
-  }
-
-  /**
-   * Get a single ticket
-   */
-  public async show(req: Request, res: Response): Promise<void> {
-    try {
-      const { uuid } = req.params;
-
-      const ticket = await prisma.ticket.findUnique({
-        where: { uuid: uuid as string },
-        include: {
-          category: true,
-          created_by: {
-            select: {
-              uuid: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-      });
-
-      if (!ticket) {
-        res.status(404).json({
-          status: 'error',
-          message: 'Ticket not found',
-        });
-        return;
-      }
-
-      res.json({
-        status: 'success',
-        message: 'Ticket retrieved successfully',
-        data: ticket,
-      });
-    } catch (error) {
-      console.error('Show ticket error:', error);
-      res.status(500).json({
-        status: 'error',
-        message: 'Internal server error',
-      });
-    }
-  }
-
-  /**
-   * Update a ticket
-   */
-  public async update(req: Request, res: Response): Promise<void> {
-    try {
-      const { uuid } = req.params;
-      const { title, content, category_id, status } = req.body;
-
-      const ticket = await prisma.ticket.findUnique({
-        where: { uuid: uuid as string },
-      });
-
-      if (!ticket) {
-        res.status(404).json({
-          status: 'error',
-          message: 'Ticket not found',
-        });
-        return;
-      }
-
-      const updatedTicket = await prisma.ticket.update({
-        where: { uuid: uuid as string },
-        data: {
-          title,
-          content,
-          category_id,
-          status,
-        },
-        include: {
-          category: true,
-        },
-      });
-
-      res.json({
-        status: 'success',
-        message: 'Ticket updated successfully',
-        data: updatedTicket,
-      });
-    } catch (error) {
-      console.error('Update ticket error:', error);
-      res.status(500).json({
-        status: 'error',
-        message: 'Internal server error',
-      });
-    }
-  }
-
-  /**
-   * Delete a ticket
-   */
-  public async destroy(req: Request, res: Response): Promise<void> {
-    try {
-      const { uuid } = req.params;
-
-      const ticket = await prisma.ticket.findUnique({
-        where: { uuid: uuid as string },
-      });
-
-      if (!ticket) {
-        res.status(404).json({
-          status: 'error',
-          message: 'Ticket not found',
-        });
-        return;
-      }
-
-      await prisma.ticket.delete({
-        where: { uuid: uuid as string },
-      });
-
-      res.json({
-        status: 'success',
-        message: 'Ticket deleted successfully',
-      });
-    } catch (error) {
-      console.error('Delete ticket error:', error);
+      console.error('User show ticket error:', error);
       res.status(500).json({
         status: 'error',
         message: 'Internal server error',

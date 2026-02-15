@@ -1,0 +1,20 @@
+meta {
+  name: Index
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:3000/api/admin/ticket/category
+  body: none
+  auth: inherit
+}
+
+headers {
+  Accept: application/json
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

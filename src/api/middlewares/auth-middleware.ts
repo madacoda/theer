@@ -34,7 +34,7 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret') as {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as {
       uuid: string;
       email: string;
     };

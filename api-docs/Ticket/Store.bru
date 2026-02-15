@@ -1,11 +1,11 @@
 meta {
-  name: Register
+  name: Store
   type: http
-  seq: 1
+  seq: 2
 }
 
 post {
-  url: http://localhost:3000/api/auth/register
+  url: http://localhost:3000/api/ticket
   body: json
   auth: inherit
 }
@@ -16,10 +16,8 @@ headers {
 
 body:json {
   {
-    "name": "Burhanuddin",
-    "email": "burhanuddin@madacoda.dev",
-    "password": "Password123",
-    "password_confirmation": "Password123"
+    "email": "me@madacoda.dev",
+    "password": "Madacoda1"
   }
 }
 

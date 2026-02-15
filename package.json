@@ -34,7 +34,8 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
-    "test": "jest",
+    "test": "bun test",
+    "seed": "bun prisma/seed.ts",
     "worker:ticket": "bun src/workers/ticket-worker.ts"
   },
   "peerDependencies": {
