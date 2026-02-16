@@ -10,6 +10,7 @@ jest.mock('../infra/db', () => ({
   default: {
     ticketCategory: {
       findMany: jest.fn(),
+      count: jest.fn(),
     },
   },
 }));

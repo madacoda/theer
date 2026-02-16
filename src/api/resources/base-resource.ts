@@ -9,8 +9,12 @@ export interface PaginationMeta {
 }
 
 export class BaseResource {
-  public static formatDateTime(date: Date | null | undefined): string | null {
-    if (!date) return null;
+  public static formatDateTime(dateInput: Date | string | null | undefined): string | null {
+    if (!dateInput) return null;
+    
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    
+    if (isNaN(date.getTime())) return null;
     
     // Format: 06 Feb 2026 04:23
     const day = String(date.getDate()).padStart(2, '0');

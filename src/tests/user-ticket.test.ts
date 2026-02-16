@@ -22,10 +22,12 @@ jest.mock('../infra/db', () => ({
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      count: jest.fn(),
     },
     ticketCategory: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      count: jest.fn(),
     },
     user: {
       findUnique: jest.fn(),
@@ -75,7 +77,9 @@ describe('User Ticket CRUD', () => {
       expect(response.body.data).toHaveLength(1);
       expect(mockedPrisma.ticket.findMany).toHaveBeenCalledWith(expect.objectContaining({
         where: {
-          created_by: { uuid: 'user-uuid' }
+          AND: [
+            { created_by: { uuid: 'user-uuid' } }
+          ]
         }
       }));
     });

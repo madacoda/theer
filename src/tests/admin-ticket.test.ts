@@ -21,6 +21,7 @@ jest.mock('../infra/db', () => ({
       findFirst: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      count: jest.fn(),
     },
     user: {
       findUnique: jest.fn(),

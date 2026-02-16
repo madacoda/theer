@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json bun.lock* ./
-RUN bun install --frozen-lockfile --production=false
+RUN bun install --frozen-lockfile
 
 # Stage 2: Builder
 FROM oven/bun:1-alpine AS builder
@@ -23,7 +23,7 @@ WORKDIR /app
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S bunuser -u 1001
+  adduser -S bunuser -u 1001
 
 # Copy only production dependencies and built files
 COPY --from=builder --chown=bunuser:nodejs /app/node_modules ./node_modules
@@ -31,6 +31,7 @@ COPY --from=builder --chown=bunuser:nodejs /app/src ./src
 COPY --from=builder --chown=bunuser:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=bunuser:nodejs /app/package.json ./
 COPY --from=builder --chown=bunuser:nodejs /app/tsconfig.json ./
+COPY --from=builder --chown=bunuser:nodejs /app/prisma.config.ts ./
 
 # Switch to non-root user
 USER bunuser

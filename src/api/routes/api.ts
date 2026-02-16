@@ -26,6 +26,7 @@ const adminUserController = new AdminUserController();
 const roleController = new RoleController();
 
 router.get('/', (req, res) => homeController.index(req, res));
+router.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 router.post('/auth/register', registerRequest, (req: Request, res: Response) => 
   authController.register(req, res)

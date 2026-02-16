@@ -45,6 +45,7 @@ DATABASE_URL="postgresql://user:password@localhost:5432/mc_theer?schema=public"
 JWT_SECRET=your_jwt_secret
 RABBITMQ_URL=amqp://localhost
 GEMINI_API_KEY=your_gemini_api_key
+FRONTEND_URL=http://localhost:1000
 ```
 
 ### 3. Install Dependencies
@@ -65,7 +66,26 @@ bun prisma/seed.ts
 
 ---
 
-## 🏃 Running the App
+## 🐳 Running with Docker (Recommended)
+
+The easiest way to get the entire stack (API, Worker, DB, RabbitMQ) running is using Docker:
+
+1.  **Configure Environment**:
+    ```bash
+    cp .env.example .env
+    ```
+2.  **Start Services**:
+    ```bash
+    docker compose up -d --build
+    ```
+3.  **Check Status**:
+    - **API**: [http://localhost:3001](http://localhost:3001)
+    - **RabbitMQ Management**: [http://localhost:15672](http://localhost:15672) (guest/guest)
+    - **Logs**: `docker compose logs -f`
+
+---
+
+## 🏃 Running the App (Manual)
 
 The system consists of two main components that should run simultaneously:
 
@@ -131,3 +151,37 @@ If you are recording a Loom video, consider this structure:
 3. **The AI Worker**: Switch to the worker terminal. Explain how it calls Gemini 1.5 Flash and updates the ticket with Category, Sentiment (1-10), and Urgency (High/Medium/Low).
 4. **Agent Workflow**: Show the `GET /api/tickets` response showing the AI results. Demonstrate calling the `/resolve` endpoint to close a ticket.
 5. **AI Tooling**: Mention how using **Antigravity (AI Assistant)** helped you rapidly scaffold the RabbitMQ logic and handle complex Prisma relation updates without manual boilerplate.
+
+---
+
+## 🔧 Troubleshooting & FAQ
+
+### 1. 500 Internal Server Error on `/api/user/me`
+
+If you receive a 500 error when hitting the `me` endpoint, check the following:
+
+- **Database Status**: Ensure the database is running and migrated (`bunx prisma db push`).
+- **JWT Token**: Ensure you are sending a valid `Bearer` token in the Authorization header.
+- **CORS Mismatch**: Check if your `FRONTEND_URL` in `.env` matches the origin of your request.
+- **Logs**: Run `docker compose logs -f api` to see the detailed error stack trace.
+
+### 2. CORS Issues
+
+The backend uses dynamic CORS based on the `FRONTEND_URL` environment variable.
+
+- Default: `http://localhost:1000`
+- To allow multiple origins, update `src/infra/config.ts`.
+- Make sure to restart the server after changing `.env`.
+
+### 3. Docker Networking
+
+If your frontend is in a separate `docker-compose.yml`, ensure they share the same network:
+
+```yaml
+# In both docker-compose files
+networks:
+  mctheer-network:
+    external: true
+```
+
+And use the container name as the host: `http://mctheer-api:3000`.

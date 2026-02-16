@@ -29,11 +29,15 @@ export class UserController {
       }
 
       res.json(UserResource.single(user));
-    } catch (error) {
-      console.error('Me error:', error);
+    } catch (error: any) {
+      console.error('Me error details:', {
+        message: error.message,
+        stack: error.stack,
+        authUser: (req as any).user
+      });
       res.status(500).json({
         status: 'error',
-        message: 'Internal server error',
+        message: 'Internal server error: ' + error.message,
       });
     }
   }
