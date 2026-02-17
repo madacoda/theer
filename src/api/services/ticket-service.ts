@@ -129,15 +129,32 @@ export class TicketService {
   public async update(uuid: string, data: any) {
     const { title, content, category_id, status, ai_draft, ai_metadata } = data;
 
+    // Check if we are manually resolving a failed triage
+    const currentTicket = await prisma.ticket.findUnique({ where: { uuid } });
+    
+    if (currentTicket?.status === 'failed_triage' && status === 'processed') {
+       if (!category_id) {
+           throw new Error('Category is required when manually triaging a failed ticket.');
+       }
+       // We can add a metadata flag that this was manual
+       const newMetadata = { 
+           ...(typeof currentTicket.ai_metadata === 'object' ? currentTicket.ai_metadata : {}),
+           manual_triage: true,
+           manual_triage_at: new Date().toISOString()
+       };
+       data.ai_metadata = newMetadata;
+    }
+
     return await prisma.ticket.update({
-      where: { uuid },
+      where: { uuid: uuid },
       data: {
         title,
         content,
-        category_id,
+        // Allow updating category relation
+        category: category_id ? { connect: { id: parseInt(category_id) } } : undefined,
         status,
         ai_draft,
-        ai_metadata
+        ai_metadata: data.ai_metadata || ai_metadata
       },
       include: {
         category: true,

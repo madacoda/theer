@@ -78,7 +78,20 @@ The easiest way to get the entire stack (API, Worker, DB, RabbitMQ) running is u
     ```bash
     docker compose up -d --build
     ```
-3.  **Check Status**:
+3.  **Initialize Database** (Required):
+
+    ```bash
+    # Generate Prisma Client
+    docker compose exec api bunx prisma generate
+
+    # Push Schema to DB
+    docker compose exec api bunx prisma db push
+
+    # Seed Database
+    docker compose exec api bun run seed
+    ```
+
+4.  **Check Status**:
     - **API**: [http://localhost:3000](http://localhost:3000)
     - **RabbitMQ Management**: [http://localhost:15672](http://localhost:15672) (guest/guest)
     - **Logs**: `docker compose logs -f`
@@ -110,6 +123,14 @@ bun run test
 ---
 
 ## 🔗 API Documentation
+
+### 📚 Bruno API Collection
+
+This project includes a [Bruno](https://www.usebruno.com/) API collection for easy testing and development.
+
+1.  Open **Bruno**.
+2.  Click **Open Collection**.
+3.  Select the `api-docs` folder in this repository.
 
 ### Auth
 
