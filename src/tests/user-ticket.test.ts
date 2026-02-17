@@ -83,7 +83,26 @@ describe('User Ticket CRUD', () => {
         }
       }));
     });
+
+    it('should not include is_ai_triage_failed in user response', async () => {
+      mockedPrisma.ticket.findMany.mockResolvedValue([
+        { 
+          uuid: 't-1', 
+          title: 'My Ticket', 
+          is_ai_triage_failed: true 
+        },
+      ]);
+      mockedPrisma.ticket.count.mockResolvedValue(1);
+
+      const response = await request(app)
+        .get('/api/ticket')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data[0]).not.toHaveProperty('is_ai_triage_failed');
+    });
   });
+
 
   describe('POST /api/ticket', () => {
     const ticketData = {

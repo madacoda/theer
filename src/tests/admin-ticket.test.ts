@@ -49,11 +49,24 @@ describe('Admin Ticket CRUD', () => {
   });
 
   describe('GET /api/admin/ticket', () => {
-    it('should list all tickets for admin', async () => {
+    it('should list all tickets for admin with AI triage status', async () => {
       mockedPrisma.ticket.findMany.mockResolvedValue([
-        { uuid: 't-1', title: 'User Ticket 1' },
-        { uuid: 't-2', title: 'User Ticket 2' },
+        { 
+          id: 1,
+          uuid: 't-1', 
+          title: 'User Ticket 1',
+          status: 'processed',
+          is_ai_triage_failed: false
+        },
+        { 
+          id: 2,
+          uuid: 't-2', 
+          title: 'User Ticket 2',
+          status: 'failed_triage',
+          is_ai_triage_failed: true
+        },
       ]);
+      mockedPrisma.ticket.count.mockResolvedValue(2);
 
       const response = await request(app)
         .get('/api/admin/ticket')
@@ -61,11 +74,14 @@ describe('Admin Ticket CRUD', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.data).toHaveLength(2);
-      expect(mockedPrisma.ticket.findMany).toHaveBeenCalledWith(expect.objectContaining({
-        where: {}
-      }));
+      expect(response.body.data[0]).toHaveProperty('is_ai_triage_failed');
+      expect(response.body.data[0].is_ai_triage_failed).toBe(false);
+      expect(response.body.data[1].is_ai_triage_failed).toBe(true);
+      
+      expect(mockedPrisma.ticket.findMany).toHaveBeenCalled();
     });
   });
+
 
   describe('PUT /api/admin/ticket/:uuid/resolve', () => {
     it('should resolve a ticket', async () => {

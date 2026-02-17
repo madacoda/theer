@@ -46,6 +46,7 @@ export async function startTicketWorker() {
           where: { id: ticket.id },
           data: { 
             status: 'failed_triage',
+            is_ai_triage_failed: true,
             ai_metadata: { ...metadata, last_error: 'Max retries exceeded' }
           },
         });
@@ -86,6 +87,7 @@ export async function startTicketWorker() {
           ai_draft: aiResult.draft,
           category_id: categoryId,
           status: 'processed',
+          is_ai_triage_failed: false, // Set to false on success
           ai_metadata: {
             ...metadata,
             processing_time_ms: processingTime,

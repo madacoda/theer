@@ -11,6 +11,7 @@ export interface TicketResponse {
   sentiment_score: number | null;
   urgency: string | null;
   ai_draft: string | null;
+  is_ai_triage_failed?: boolean;
   category?: any;
   created_by?: any;
   resolved_by?: any;
@@ -20,8 +21,8 @@ export interface TicketResponse {
 }
 
 export class TicketResource extends BaseResource {
-  public static transform(ticket: any): TicketResponse {
-    return {
+  public static transform(ticket: any, isAdmin: boolean = false): TicketResponse {
+    const response: TicketResponse = {
       id: ticket.id,
       uuid: ticket.uuid,
       title: ticket.title,
@@ -37,14 +38,21 @@ export class TicketResource extends BaseResource {
       created_at: this.formatDateTime(ticket.created_at),
       updated_at: this.formatDateTime(ticket.updated_at),
     };
+
+    if (isAdmin) {
+      response.is_ai_triage_failed = ticket.is_ai_triage_failed ?? (ticket.status === 'failed_triage');
+    }
+
+    return response;
   }
 
-  public static single(ticket: any, message: string = 'Ticket retrieved successfully') {
-    return this.successResponse(this.transform(ticket), message);
+  public static single(ticket: any, isAdmin: boolean = false, message: string = 'Ticket retrieved successfully') {
+    return this.successResponse(this.transform(ticket, isAdmin), message);
   }
 
-  public static collection(tickets: any[], meta: any, message: string = 'Tickets retrieved successfully') {
-    const transformed = tickets.map(ticket => this.transform(ticket));
+  public static collection(tickets: any[], meta: any, message: string = 'Tickets retrieved successfully', isAdmin: boolean = false) {
+    const transformed = tickets.map(ticket => this.transform(ticket, isAdmin));
     return this.successResponse(transformed, message, meta);
   }
 }
+

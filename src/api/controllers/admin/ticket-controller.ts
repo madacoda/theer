@@ -36,7 +36,7 @@ export class TicketController {
       const path = `${req.protocol}://${req.get('host')}${req.baseUrl}${req.path}`;
       const meta = TicketResource.paginate(tickets, total, page, perPage, path);
 
-      res.json(TicketResource.collection(tickets, meta, 'Tickets retrieved successfully'));
+      res.json(TicketResource.collection(tickets, meta, 'Tickets retrieved successfully', true));
     } catch (error) {
       logger.error('Index tickets error:', error);
       res.status(500).json({
@@ -114,7 +114,7 @@ export class TicketController {
         return;
       }
 
-      res.json(TicketResource.single(ticket));
+      res.json(TicketResource.single(ticket, true));
     } catch (error) {
       logger.error('Show ticket error:', error);
       res.status(500).json({
