@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { TicketService } from '../services/ticket-service';
 import { TicketResource } from '../resources/ticket-resource';
+import { logger } from '../../infra/logger';
 
 /**
  * TicketController (User)
@@ -20,6 +21,7 @@ export class TicketController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const perPage = parseInt(req.query.perPage as string) || 10;
+      // ... (rest of logic same until catch)
       const user = (req as any).user;
       
       const filters = {
@@ -36,7 +38,7 @@ export class TicketController {
 
       res.json(TicketResource.collection(tickets, meta, 'Your tickets retrieved successfully'));
     } catch (error) {
-      console.error('User index tickets error:', error);
+      logger.error('User index tickets error:', error);
       res.status(500).json({
         status: 'error',
         message: 'Internal server error',
@@ -62,7 +64,7 @@ export class TicketController {
         },
       });
     } catch (error) {
-      console.error('User store ticket error:', error);
+      logger.error('User store ticket error:', error);
       res.status(500).json({
         status: 'error',
         message: 'Internal server error',
@@ -89,7 +91,7 @@ export class TicketController {
 
       res.json(TicketResource.single(ticket));
     } catch (error) {
-      console.error('User show ticket error:', error);
+      logger.error('User show ticket error:', error);
       res.status(500).json({
         status: 'error',
         message: 'Internal server error',

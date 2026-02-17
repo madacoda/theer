@@ -12,7 +12,7 @@ export const ticketRequest = [
     .isLength({ max: 255 })
     .withMessage('Subject must not exceed 255 characters'),
   body('content')
-    .optional()
+    .notEmpty()
     .isString()
     .withMessage('Content must be a string'),
   body('category_id')

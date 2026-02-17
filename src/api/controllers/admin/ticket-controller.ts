@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { TicketService } from '../../services/ticket-service';
 import { TicketResource } from '../../resources/ticket-resource';
+import { logger } from '../../../infra/logger';
 
 /**
  * TicketController
@@ -20,6 +21,7 @@ export class TicketController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const perPage = parseInt(req.query.perPage as string) || 10;
+      // ... (logic)
       const user = (req as any).user;
       
       const filters = {
@@ -36,7 +38,7 @@ export class TicketController {
 
       res.json(TicketResource.collection(tickets, meta, 'Tickets retrieved successfully'));
     } catch (error) {
-      console.error('Index tickets error:', error);
+      logger.error('Index tickets error:', error);
       res.status(500).json({
         status: 'error',
         message: 'Internal server error',
@@ -62,7 +64,7 @@ export class TicketController {
         },
       });
     } catch (error) {
-      console.error('Store ticket error:', error);
+      logger.error('Store ticket error:', error);
       res.status(500).json({
         status: 'error',
         message: 'Internal server error',
@@ -87,7 +89,7 @@ export class TicketController {
         data: updatedTicket,
       });
     } catch (error) {
-      console.error('Resolve ticket error:', error);
+      logger.error('Resolve ticket error:', error);
       res.status(500).json({
         status: 'error',
         message: 'Internal server error',
@@ -114,7 +116,7 @@ export class TicketController {
 
       res.json(TicketResource.single(ticket));
     } catch (error) {
-      console.error('Show ticket error:', error);
+      logger.error('Show ticket error:', error);
       res.status(500).json({
         status: 'error',
         message: 'Internal server error',
@@ -136,7 +138,7 @@ export class TicketController {
         data: updatedTicket,
       });
     } catch (error) {
-      console.error('Update ticket error:', error);
+      logger.error('Update ticket error:', error);
       res.status(500).json({
         status: 'error',
         message: 'Internal server error',
@@ -157,7 +159,7 @@ export class TicketController {
         message: 'Ticket deleted successfully',
       });
     } catch (error) {
-      console.error('Delete ticket error:', error);
+      logger.error('Delete ticket error:', error);
       res.status(500).json({
         status: 'error',
         message: 'Internal server error',

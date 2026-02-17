@@ -17,7 +17,7 @@ export interface AIResult {
  */
 export async function triageTicketAI(title: string, content: string): Promise<AIResult> {
   const fallback: AIResult = {
-    category: 'Technical',
+    category: 'Technical Support',
     sentiment_score: 5,
     urgency: 'Low',
     draft: 'Thank you for contacting us. We have received your ticket and our team will get back to you shortly.',
@@ -56,7 +56,7 @@ export async function triageTicketAI(title: string, content: string): Promise<AI
       Ticket Content: ${content}
 
       Return a JSON object with:
-      - category: Billing, Technical, or Feature Request
+      - category: Billing, Technical Support, or Feature Request
       - sentiment_score: 1-10 (1=frustrated, 10=happy)
       - urgency: Low, Medium, or High
       - draft: A polite starting response draft

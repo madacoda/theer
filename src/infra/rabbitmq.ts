@@ -1,5 +1,6 @@
 import amqp from 'amqplib';
 import dotenv from 'dotenv';
+import { logger } from './logger';
 
 dotenv.config();
 
@@ -16,7 +17,7 @@ export async function initRabbitMQ() {
   try {
     if (!connection) {
       connection = await amqp.connect(RABBITMQ_URL);
-      console.log('🐇 Connected to RabbitMQ');
+      logger.info('🐇 Connected to RabbitMQ');
     }
     
     if (!channel) {
@@ -26,7 +27,7 @@ export async function initRabbitMQ() {
     
     return { connection, channel };
   } catch (error) {
-    console.error('❌ RabbitMQ Connection Error:', error);
+    logger.error('❌ RabbitMQ Connection Error:', error);
     throw error;
   }
 }
@@ -40,9 +41,9 @@ export async function enqueueJob(queue: string, data: any) {
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(data)), {
       persistent: true,
     });
-    console.log(`✉️ Job enqueued to ${queue}`);
+    logger.info(`✉️ Job enqueued to ${queue}`);
   } catch (error) {
-    console.error('❌ Failed to enqueue job:', error);
+    logger.error('❌ Failed to enqueue job:', error);
     throw error;
   }
 }

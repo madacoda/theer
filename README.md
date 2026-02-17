@@ -79,7 +79,7 @@ The easiest way to get the entire stack (API, Worker, DB, RabbitMQ) running is u
     docker compose up -d --build
     ```
 3.  **Check Status**:
-    - **API**: [http://localhost:3001](http://localhost:3001)
+    - **API**: [http://localhost:3000](http://localhost:3000)
     - **RabbitMQ Management**: [http://localhost:15672](http://localhost:15672) (guest/guest)
     - **Logs**: `docker compose logs -f`
 

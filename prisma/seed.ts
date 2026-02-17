@@ -33,13 +33,12 @@ async function main() {
   // 2. Seed Users
   console.log('--- Seeding Users ---');
   const hashedPassword = await bcrypt.hash('Password123', 10);
-  const madacodaPassword = await bcrypt.hash('Madacoda1', 10);
   
   const users = [
     {
       name: 'Madacoda Admin',
       email: 'me@madacoda.dev',
-      password: madacodaPassword,
+      password: hashedPassword,
     },
     {
       name: 'Regular User',
@@ -119,6 +118,16 @@ async function main() {
       create: cat,
     });
     console.log(`Category ready: ${cat.title}`);
+  }
+
+  // 5. Reset Sequences (Required when inserting explicit IDs in Postgres)
+  console.log('--- Resetting Sequences ---');
+  const tables = ['roles', 'users', 'ticket_categories', 'tickets', 'user_roles'];
+  for (const table of tables) {
+    const seqName = `${table}_id_seq`;
+    await prisma.$executeRawUnsafe(`
+      SELECT setval('${seqName}', COALESCE((SELECT MAX(id) FROM ${table}), 1), (SELECT MAX(id) FROM ${table}) IS NOT NULL);
+    `);
   }
 
   console.log('✅ Seeding completed successfully!');
