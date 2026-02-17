@@ -109,6 +109,7 @@ export class TicketService {
         title,
         content,
         status: status || 'open',
+        is_ai_triage_failed: true,
         category: category_id ? { connect: { id: Number(category_id) } } : undefined,
         created_by: { connect: { uuid: userUuid } },
       },

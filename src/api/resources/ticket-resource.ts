@@ -1,7 +1,7 @@
 import { BaseResource } from './base-resource';
 import { UserResource } from './user-resource';
 import { TicketCategoryResource } from './ticket-category-resource';
-import { AI_FAILURE_DRAFT } from '../../utils/ai';
+import { AI_FAILURE_DRAFT, checkIfDraftIsPlaceholder } from '../../utils/ai';
 
 export interface TicketResponse {
   id: number;
@@ -40,9 +40,16 @@ export class TicketResource extends BaseResource {
       updated_at: this.formatDateTime(ticket.updated_at),
     };
 
+    const isPlaceholder = checkIfDraftIsPlaceholder(ticket.ai_draft);
+
     if (isAdmin) {
-      // Explicitly check if triage failed via flag or failure draft
-      response.is_ai_triage_failed = ticket.is_ai_triage_failed || ticket.ai_draft === AI_FAILURE_DRAFT;
+      // Flag is true if DB says so OR if draft is detected as placeholder
+      response.is_ai_triage_failed = ticket.is_ai_triage_failed || isPlaceholder;
+    }
+
+    // Clean up the draft for the frontend if it's a placeholder
+    if (isPlaceholder) {
+      response.ai_draft = 'AI Triage Failed. Human intervention required. Please provide a response manually.';
     }
 
     return response;

@@ -1,6 +1,6 @@
 import prisma from '../infra/db';
 import { initRabbitMQ, TICKET_QUEUE } from '../infra/rabbitmq';
-import { triageTicketAI, AI_FAILURE_DRAFT } from '../utils/ai';
+import { triageTicketAI, AI_FAILURE_DRAFT, checkIfDraftIsPlaceholder } from '../utils/ai';
 import { logger } from '../infra/logger';
 
 /**
@@ -79,15 +79,17 @@ export async function startTicketWorker() {
       }
 
       // 5. Update ticket in database with detailed audit metadata
+      const triageSucceeded = !checkIfDraftIsPlaceholder(aiResult.draft);
+      
       await prisma.ticket.update({
         where: { id: ticket.id },
         data: {
           sentiment_score: aiResult.sentiment_score,
           urgency: aiResult.urgency,
-          ai_draft: aiResult.draft,
+          ai_draft: triageSucceeded ? aiResult.draft : AI_FAILURE_DRAFT,
           category_id: categoryId,
           status: 'processed',
-          is_ai_triage_failed: aiResult.draft === AI_FAILURE_DRAFT, // Set to true if it matches fallback
+          is_ai_triage_failed: !triageSucceeded, 
           ai_metadata: {
             ...metadata,
             processing_time_ms: processingTime,

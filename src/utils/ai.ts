@@ -12,7 +12,29 @@ export interface AIResult {
   draft: string;
 }
 
-export const AI_FAILURE_DRAFT = 'AI Triage Failed. Human intervention required. Please provide a response manually.';
+export const AI_FAILURE_DRAFT = 'AI_TRIAGE_FAILED_HUMAN_INTERVENTION_REQUIRED';
+
+export const AI_PLACEHOLDER_PATTERNS = [
+  'thank you for contacting us',
+  'received your ticket',
+  'get back to you shortly',
+  'team will contact you',
+  'received your request',
+  'processing your request',
+];
+
+/**
+ * Check if the AI returned a generic placeholder
+ */
+export function checkIfDraftIsPlaceholder(draft: string): boolean {
+  if (!draft || draft === AI_FAILURE_DRAFT) return true;
+  if (draft.length < 30) return true;
+  
+  const lowerDraft = draft.toLowerCase();
+  const matchedPatterns = AI_PLACEHOLDER_PATTERNS.filter(pattern => lowerDraft.includes(pattern));
+  
+  return matchedPatterns.length > 0 && draft.length < 150;
+}
 
 /**
  * Call Gemini AI to triage a ticket
