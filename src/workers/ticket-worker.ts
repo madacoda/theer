@@ -1,6 +1,6 @@
 import prisma from '../infra/db';
 import { initRabbitMQ, TICKET_QUEUE } from '../infra/rabbitmq';
-import { triageTicketAI } from '../utils/ai';
+import { triageTicketAI, AI_FAILURE_DRAFT } from '../utils/ai';
 import { logger } from '../infra/logger';
 
 /**
@@ -87,7 +87,7 @@ export async function startTicketWorker() {
           ai_draft: aiResult.draft,
           category_id: categoryId,
           status: 'processed',
-          is_ai_triage_failed: false, // Set to false on success
+          is_ai_triage_failed: aiResult.draft === AI_FAILURE_DRAFT, // Set to true if it matches fallback
           ai_metadata: {
             ...metadata,
             processing_time_ms: processingTime,
@@ -112,6 +112,8 @@ export async function startTicketWorker() {
             await prisma.ticket.update({
               where: { id: ticketId },
               data: {
+                is_ai_triage_failed: true, // Mark as failed on error
+                ai_draft: AI_FAILURE_DRAFT,
                 ai_metadata: {
                   ...metadata,
                   retry_count: (metadata.retry_count || 0) + 1,

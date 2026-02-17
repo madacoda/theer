@@ -68,7 +68,7 @@ model Ticket {
   urgency             String?
   ai_draft            String?
   ai_metadata         Json?
-  is_ai_triage_failed Boolean         @default(false)
+  is_ai_triage_failed Boolean         @default(true)
   created_by_id       Int?
   resolved_by_id      Int?
   resolved_at         DateTime?

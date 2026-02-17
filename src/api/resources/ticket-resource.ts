@@ -1,6 +1,7 @@
 import { BaseResource } from './base-resource';
 import { UserResource } from './user-resource';
 import { TicketCategoryResource } from './ticket-category-resource';
+import { AI_FAILURE_DRAFT } from '../../utils/ai';
 
 export interface TicketResponse {
   id: number;
@@ -40,7 +41,8 @@ export class TicketResource extends BaseResource {
     };
 
     if (isAdmin) {
-      response.is_ai_triage_failed = ticket.is_ai_triage_failed ?? (ticket.status === 'failed_triage');
+      // Explicitly check if triage failed via flag or failure draft
+      response.is_ai_triage_failed = ticket.is_ai_triage_failed || ticket.ai_draft === AI_FAILURE_DRAFT;
     }
 
     return response;

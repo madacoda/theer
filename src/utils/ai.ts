@@ -12,6 +12,8 @@ export interface AIResult {
   draft: string;
 }
 
+export const AI_FAILURE_DRAFT = 'AI Triage Failed. Human intervention required. Please provide a response manually.';
+
 /**
  * Call Gemini AI to triage a ticket
  */
@@ -20,7 +22,7 @@ export async function triageTicketAI(title: string, content: string): Promise<AI
     category: 'Technical Support',
     sentiment_score: 5,
     urgency: 'Low',
-    draft: 'Thank you for contacting us. We have received your ticket and our team will get back to you shortly.',
+    draft: AI_FAILURE_DRAFT,
   };
 
   if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === '') {
@@ -50,16 +52,21 @@ export async function triageTicketAI(title: string, content: string): Promise<AI
 
     const prompt = `
       You are a professional support ticket triager.
-      Analyze the following support ticket and provide a structured response.
+      Analyze the following support ticket and provide a structured JSON response.
+      
+      CRITICAL RULES:
+      1. DO NOT use generic placeholder responses or standard "Thank you for contacting us" messages.
+      2. The 'draft' MUST be context-aware and specifically address the details mentioned in the user's ticket.
+      3. Focus on accurately identifying the category, sentiment score (1-10), and urgency (Low, Medium, High).
       
       Ticket Title: ${title}
       Ticket Content: ${content}
 
       Return a JSON object with:
       - category: Billing, Technical Support, or Feature Request
-      - sentiment_score: 1-10 (1=frustrated, 10=happy)
+      - sentiment_score: 1-10
       - urgency: Low, Medium, or High
-      - draft: A polite starting response draft
+      - draft: A custom, context-aware support draft response (DO NOT use placeholders).
     `;
 
     const result = await model.generateContent(prompt);
